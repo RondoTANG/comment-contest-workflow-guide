@@ -719,6 +719,11 @@ non_event_url_patterns:
     menu.addEventListener('click',()=>{const opened=side.classList.toggle('open');menu.setAttribute('aria-expanded',String(opened))});
     links.forEach(link=>link.addEventListener('click',()=>{side.classList.remove('open');menu.setAttribute('aria-expanded','false');search.value='';sections.forEach(section=>{section.hidden=false})}));
     function selectHashPanel(){
+      if(!location.hash){
+        activateTab('workflow1');
+        window.scrollTo({top:0,behavior:'instant'});
+        return;
+      }
       const target=document.getElementById(location.hash.slice(1));
       if(!target)return;
       const panel=target.closest('[role="tabpanel"]');
