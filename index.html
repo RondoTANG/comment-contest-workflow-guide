@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>评论大赛工作流｜技术与测试对接说明</title>
+  <style>
+    :root{--bg:#f5f7fb;--paper:#fff;--ink:#182338;--muted:#56657c;--line:#dce4ee;--blue:#245edb;--soft:#edf3ff;--warn:#8d5200;--warn-bg:#fff7e8;--good:#087755;--bad:#b23535}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    a{color:var(--blue)}
+    code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    code{font-size:.92em;overflow-wrap:anywhere}
+    pre{margin:12px 0 0;padding:18px;border:1px solid #d5e0f1;border-radius:9px;background:#f6f9ff;overflow:auto;line-height:1.58;font-size:13px;white-space:pre}
+    .side{position:fixed;inset:0 auto 0 0;width:232px;padding:26px 14px;background:#fff;border-right:1px solid var(--line);overflow:auto;z-index:20}
+    .side-title{font-size:14px;font-weight:750;margin:0 10px 18px;color:#263a58}
+    .nav{display:grid;gap:3px}
+    .nav a{display:block;padding:9px 10px;border-radius:8px;color:#43536c;text-decoration:none;font-size:14px}
+    .nav a:hover,.nav a.active{background:var(--soft);color:var(--blue)}
+    .bar{position:sticky;top:0;z-index:10;margin-left:232px;min-height:60px;padding:8px 26px;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line)}
+    .bar-label{font-weight:700;white-space:nowrap;color:#35465f}
+    .search{margin-left:auto;width:min(350px,35vw);padding:8px 11px;border:1px solid #cdd8e6;border-radius:8px;background:#fff;color:var(--ink)}
+    .search:focus{outline:2px solid #a9c6ff;outline-offset:1px}
+    .btn{padding:7px 11px;border:1px solid #cdd8e6;border-radius:8px;background:#fff;color:#34445b;white-space:nowrap}
+    .btn:hover{background:#f5f8fc}
+    .menu-btn{display:none}
+    main{margin-left:232px;padding:38px 34px 90px}
+    article{max-width:1160px;margin:auto}
+    h1{font-size:clamp(29px,3vw,39px);letter-spacing:-.025em;line-height:1.25;margin:0 0 11px}
+    h2{font-size:25px;line-height:1.35;margin:0 0 16px}
+    h3{font-size:18px;margin:25px 0 9px}
+    p{margin:9px 0 14px}
+    .lead{font-size:16px;color:var(--muted);max-width:930px}
+    section{scroll-margin-top:78px;margin-top:54px}
+    section[hidden]{display:none}
+    .section-note{color:var(--muted);margin-top:-7px}
+    .callout{padding:14px 18px;border-left:4px solid var(--blue);background:#ecf3ff;border-radius:0 8px 8px 0}
+    .callout.warn{border-color:#c88217;background:var(--warn-bg);color:#65430e}
+    .callout.good{border-color:var(--good);background:#eefaf5}
+    .table-wrap,.flow-wrap{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+    table{border-collapse:collapse;width:100%;min-width:620px}
+    th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:11px 14px}
+    th{background:#f0f4f9;color:#30435f;font-weight:700;white-space:nowrap}
+    tr:last-child td{border-bottom:none}
+    td:first-child{font-weight:620}
+    .small{font-size:13px;color:var(--muted)}
+    .flow{min-width:820px;display:flex;align-items:stretch;gap:7px;padding:19px}
+    .flow-step{flex:1;min-width:0;padding:12px;border:1px solid #cbd9ec;border-radius:9px;background:#f8fbff}
+    .flow-step strong{display:block;line-height:1.45}
+    .flow-step span{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+    .arrow{display:flex;align-items:center;color:var(--blue);font-size:23px;font-weight:700}
+    .branch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:13px}
+    .branch>div{padding:13px 15px;background:#fff;border:1px solid var(--line);border-radius:9px}
+    .branch strong{display:block}
+    .branch p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .pill{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:30px;background:#eef5ff;color:var(--blue);font-size:11px;font-weight:700;vertical-align:middle}
+    details{margin:10px 0;border:1px solid var(--line);border-radius:9px;background:#fff}
+    summary{padding:12px 15px;font-weight:700;cursor:pointer}
+    details .inside{padding:0 15px 15px}
+    details .inside p:first-child{margin-top:0}
+    .kicker{font-size:12px;color:var(--blue);font-weight:800;letter-spacing:.06em;margin-bottom:7px}
+    .note-list{padding-left:21px;margin:10px 0}
+    .note-list li{margin:5px 0}
+    .foot{margin-top:54px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}
+    .workflow-tabs{display:flex;gap:8px;margin:27px 0 25px;padding-bottom:9px;border-bottom:1px solid var(--line);overflow-x:auto}
+    .workflow-tab{flex:0 0 auto;padding:9px 16px;border:1px solid transparent;border-radius:8px;background:transparent;color:#43536c;font-weight:700;white-space:nowrap}
+    .workflow-tab:hover{background:#eef3fa}
+    .workflow-tab[aria-selected="true"]{background:var(--soft);border-color:#cadbff;color:var(--blue)}
+    .workflow-tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+    .workflow-intro{margin-top:7px}
+    [hidden]{display:none!important}
+    @media(max-width:1050px){.side{width:200px}.bar,main{margin-left:200px}main{padding:32px 25px 80px}}
+    @media(max-width:800px){.side{display:none;position:fixed;top:60px;bottom:0;width:min(280px,88vw);box-shadow:6px 0 24px #1d2b4018}.side.open{display:block}.bar,main{margin-left:0}.bar{padding:8px 14px}.menu-btn{display:inline-block}.bar-label{display:none}.search{margin-left:0;flex:1;min-width:80px;width:auto}main{padding:27px 16px 70px}.branch{grid-template-columns:1fr}h2{font-size:23px}}
+    @media(max-width:480px){.bar{gap:5px}.btn{padding:7px 8px;font-size:13px}.search{font-size:13px}th,td{padding:9px 10px}h1{font-size:30px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media print{body{background:#fff}.side,.bar,.workflow-tabs{display:none!important}main{margin:0;padding:0}article{max-width:none}section{margin-top:28px;break-inside:avoid}.table-wrap,.flow-wrap{overflow:visible}.flow{min-width:0}.flow-step{break-inside:avoid}details{break-inside:avoid}details:not([open]) .inside{display:block}a{color:inherit;text-decoration:none}}
+  </style>
+</head>
+<body>
+  <aside id="side" class="side" aria-label="章节目录">
+    <p class="side-title">技术与测试对接</p>
+    <nav class="nav" data-workflow-nav="workflow1" aria-label="工作流1章节">
+      <a href="#overview">工作流总览</a>
+      <a href="#input">调用输入</a>
+      <a href="#output">最终输出</a>
+      <a href="#config">内置配置与修改</a>
+      <a href="#save-api">入库接口与插件</a>
+      <a href="#tests">测试要点与当前状态</a>
+    </nav>
+    <nav class="nav" data-workflow-nav="workflow2" aria-label="工作流2章节" hidden>
+      <a href="#workflow2-scope">工作流2建设说明</a>
+    </nav>
+  </aside>
+  <header class="bar">
+    <button id="menu" class="btn menu-btn" type="button" aria-controls="side" aria-expanded="false">目录</button>
+    <span class="bar-label">工作流对接说明</span>
+    <input id="search" class="search" type="search" aria-label="搜索文档" placeholder="搜索字段、节点或规则">
+    <button id="expand" class="btn" type="button">展开</button>
+    <button id="collapse" class="btn" type="button">收起</button>
+    <button id="print" class="btn" type="button">打印</button>
+  </header>
+  <main><article>
+    <header>
+      <h1>评论大赛工作流对接说明</h1>
+      <p class="lead">按工作流查看面向技术与测试的接口契约。工作流1已形成事件采集与入库的对接说明；工作流2将用于文章与题库生成，具体方案尚待确认。</p>
+    </header>
+    <div class="workflow-tabs" role="tablist" aria-label="工作流切换">
+      <button id="tab-workflow1" class="workflow-tab" type="button" role="tab" aria-controls="workflow1" aria-selected="true" tabindex="0">工作流1 · 事件生成入库</button>
+      <button id="tab-workflow2" class="workflow-tab" type="button" role="tab" aria-controls="workflow2" aria-selected="false" tabindex="-1">工作流2 · 文章与题库生成</button>
+    </div>
+    <div id="workflow1" role="tabpanel" aria-labelledby="tab-workflow1">
+    <header class="workflow-intro">
+      <h2>工作流1 · 事件生成入库</h2>
+      <p class="lead">业务系统传入一个采集基准日期；工作流检索该日期及前一天的公开资讯，清洗并整理为候选事件，逐事件调用入库接口。本页说明工作流级输入、最终输出及当前内置配置。</p>
+      <div class="callout"><strong>对接边界：</strong>业务系统只传 <code>date</code>，不传搜索词、品牌、历史 URL 或批次号。搜索配置保存在工作流节点内；技术需提供正式入库接口并发布为 HiAgent 可调用的插件。工作流负责本轮清洗、同事件整理和提交候选事件；跨批次及入库后的事件去重由业务系统处理。</div>
+    </header>
+
+    <section id="overview" data-search="流程 总览 搜索 清洗 AI 入库">
+      <div class="kicker">01 / 工作流</div>
+      <h2>工作流总览</h2>
+      <p class="section-note">搜索按词循环，入库按事件循环；一个事件可对应多个来源 URL，但只发起一次该事件的入库请求。</p>
+      <div class="flow-wrap" role="img" aria-label="开始输入日期，配置与搜索计划，逐词豆包搜索，规则清洗，AI同事件整理，校验并逐事件入库，汇总后结束">
+        <div class="flow">
+          <div class="flow-step"><strong>1 开始</strong><span>接收 date</span></div><div class="arrow">→</div>
+          <div class="flow-step"><strong>2 内置配置</strong><span>生成搜索词、时间范围和批次号</span></div><div class="arrow">→</div>
+          <div class="flow-step"><strong>3 逐词搜索</strong><span>豆包国内 Custom；每词调用一次</span></div><div class="arrow">→</div>
+          <div class="flow-step"><strong>4 规则清洗</strong><span>日期、URL、品牌初筛；保留全文</span></div><div class="arrow">→</div>
+          <div class="flow-step"><strong>5 AI归并</strong><span>判断同一事件和排除项</span></div><div class="arrow">→</div>
+          <div class="flow-step"><strong>6A / 6B 入库</strong><span>校验模型结果；调用技术提供的入库插件</span></div><div class="arrow">→</div>
+          <div class="flow-step"><strong>7 汇总结束</strong><span>输出处理状态与数量</span></div>
+        </div>
+      </div>
+      <div class="branch">
+        <div><strong>正常有事件</strong><p>6A 组装事件请求；6B 每事件调用一次入库插件；7 汇总返回 JSON 文本。</p></div>
+        <div><strong>正常无有效事件</strong><p>跳过不必要的模型或入库步骤，最终 <code>output</code> 是固定纯文本 <code>无有效事件</code>。</p></div>
+        <div><strong>执行或校验失败</strong><p>应走失败出口；不得把全搜索失败或模型校验失败当作“无有效事件”。</p></div>
+      </div>
+      <p class="small">本轮同 URL 合并发生在工作流内；跨批次重复来源、不同 URL 的同一历史事件及入库后的候选事件合并由业务系统负责。工作流不查询历史库，不计算真实热度，不生成评论文章、题目或评分规则。</p>
+    </section>
+
+    <section id="input" data-search="输入 date run_date 时间范围 请求 JSON">
+      <div class="kicker">02 / 调用契约</div>
+      <h2>工作流输入参数</h2>
+      <p>业务系统调用 HiAgent 工作流时，开始节点只有一个业务字段。平台鉴权、工作流 ID 和传输层封装按实际 HiAgent 调用方式另行配置，不属于下面的业务参数。</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>字段</th><th>类型／必填</th><th>格式与作用</th><th>边界</th></tr></thead>
+        <tbody><tr><td><code>date</code></td><td>String／必填</td><td>严格 <code>YYYY-MM-DD</code>，须为有效日历日期。工作流搜索该日期前一天和当天两个北京时间自然日。</td><td>不要求等于实际执行日；允许补跑历史日期。节点 2 内部接收名为 <code>run_date</code>，调用方仍传 <code>date</code>。</td></tr></tbody>
+      </table></div>
+      <p>业务输入示例：</p>
+      <pre><code>{"date":"2026-09-29"}</code></pre>
+      <p>该示例使节点 2 生成豆包 <code>TimeRange=2026-09-28..2026-09-29</code>；<code>collected_at</code>另记实际运行时刻。日期无效时节点 2 报错，工作流不应继续搜索。历史 URL 无需传入：本轮 URL 合并由清洗节点完成；跨批次 URL 防重和入库后事件去重由业务系统负责。</p>
+    </section>
+
+    <section id="output" data-search="输出 output status batch_id saved_event_count existing_event_count errors JSON 无有效事件">
+      <div class="kicker">03 / 返回契约</div>
+      <h2>最终输出字段</h2>
+      <p>工作流结束节点只声明一个 <code>output:String</code>。它有两种正常内容形态，调用方必须先判断固定文案，再决定是否解析 JSON；不要把所有结果一律当 JSON。</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>层级</th><th>字段</th><th>类型</th><th>含义与处理方式</th></tr></thead>
+        <tbody>
+          <tr><td>End 输出</td><td><code>output</code></td><td>String</td><td>等于 <code>无有效事件</code> 时为正常空结果；否则按下面入库汇总 JSON 文本解析。HiAgent HTTP 响应可能还有平台自身包装，本表只定义工作流 End 变量。</td></tr>
+          <tr><td>入库汇总 JSON</td><td><code>batch_id</code></td><td>String</td><td>本次执行批次号，格式 <code>YYYYMMDD-UUID</code>；用于追踪，不是事件主键。</td></tr>
+          <tr><td>入库汇总 JSON</td><td><code>status</code></td><td>String</td><td><code>success</code>＝本分支全部成功；<code>partial_success</code>＝有搜索或保存错误但仍有处理结果；<code>failed</code>＝本分支拟保存事件均未保存。平台级异常可能没有该字段。</td></tr>
+          <tr><td>入库汇总 JSON</td><td><code>saved_event_count</code></td><td>Integer</td><td>本批新建成功的事件数；按事件计数，不按 URL 计数。</td></tr>
+          <tr><td>入库汇总 JSON</td><td><code>existing_event_count</code></td><td>Integer</td><td>入库服务判断为已存在的事件数；不计入新建。</td></tr>
+          <tr><td>入库汇总 JSON</td><td><code>message</code></td><td>String</td><td>简短处理提示，例如“事件处理完成”；不作为机器判定依据，以 <code>status</code> 和计数为准。</td></tr>
+          <tr><td>入库汇总 JSON</td><td><code>errors</code></td><td>Array&lt;Object&gt;</td><td>错误列表；成功可为空数组。每项固定含 <code>stage</code>、<code>code</code>，可能按错误类型附 <code>query_id</code>、<code>title</code>、<code>urls</code>；不要假定这些附加字段都存在。</td></tr>
+        </tbody>
+      </table></div>
+      <p>最终 <code>output</code> 只用于告知批次处理结果，<strong>不返回事件列表、来源 URL 或 Markdown 正文</strong>；这些内容由逐事件入库接口保存。技术需提供业务系统的正式入库与后续查询能力。当前已验证的临时接口使用独立存储，不等于业务系统已接收这些事件。</p>
+      <h3>两种正常返回示例</h3>
+      <p>有事件进入入库汇总时，<code>output</code> 的字符串内容如下（下方展示的是解析后的内容，实际 <code>output</code> 仍为 String）：</p>
+      <pre><code>{
+  "batch_id": "20260929-11111111-1111-4111-8111-111111111111",
+  "status": "success",
+  "saved_event_count": 2,
+  "existing_event_count": 1,
+  "message": "事件处理完成",
+  "errors": []
+}</code></pre>
+      <p>正常空结果：<code>output</code> 的字符串内容恰为 <code>无有效事件</code>，没有批次号、计数或 <code>errors</code>。若以工作流变量形式展示：</p>
+      <pre><code>{"output":"无有效事件"}</code></pre>
+      <div class="callout warn"><strong>接线前提：</strong>当前导出的 HiAgent 画布仍可能让 <code>fatal=true</code> 落入空事件的 Else 分支；固定文案节点的新代码也尚待同步。因此这里的“无有效事件”契约是设计目标，不能在修正和联调前把现有画布的该文案当作可靠成功信号。平台报错、超时或 JSON 解析失败也不能伪装为此文案。</div>
+    </section>
+
+    <section id="config" data-search="配置 搜索计划 Python BRAND_ROWS QUERY_ROWS RULES MAX_SEARCH_REQUESTS Count 发布 品牌 别名 正则">
+      <div class="kicker">04 / 内置配置</div>
+      <h2>配置与搜索计划在工作流内部维护</h2>
+      <p>开始节点不接受品牌、搜索词或过滤规则。它们写在节点 2“配置与搜索计划”的 Python 脚本里：<code>BRAND_ROWS</code>、<code>QUERY_ROWS</code>、<code>RULES</code>、<code>MAX_SEARCH_REQUESTS</code>。节点 2 运行时生成 <code>plan:String</code> 配置快照，后续节点 4、6A、7 读取同一份快照。<code>plan</code> 不含搜索结果或正文。</p>
+      <div class="callout"><strong>修改方式：</strong>维护人员需进入 HiAgent 工作流，编辑节点 2 的 Python 配置，检查品牌 ID／查询 ID 与规则，保存并发布新版工作流，随后用单节点 Debug 和端到端样本回归。只改本地 Markdown、HTML 或旧 PoC YAML，<strong>不会</strong>自动改变已发布工作流。豆包每词返回数 <code>Count</code> 是例外：仅在搜索插件节点配置，当前为 <code>1</code>，不在节点 2 Python 中写死。</div>
+
+      <h3>品牌及别名：<code>BRAND_ROWS</code> <span class="pill">9 个启用</span></h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>品牌</th><th>精确别名（名称也参与精确匹配）</th><th>弱别名及所需邻近语境</th></tr></thead>
+        <tbody>
+          <tr><td>BR001</td><td>东风汽车</td><td>东风汽车集团</td><td>东风；汽车、车型、新能源、车展、智能驾驶</td></tr>
+          <tr><td>BR002</td><td>东风风神</td><td>—</td><td>风神；东风、汽车、车型</td></tr>
+          <tr><td>BR003</td><td>岚图汽车</td><td>岚图</td><td>—</td></tr>
+          <tr><td>BR004</td><td>猛士汽车</td><td>—</td><td>猛士；东风、汽车、越野、车型</td></tr>
+          <tr><td>BR005</td><td>东风奕派</td><td>—</td><td>奕派、东风eπ；东风、汽车、车型</td></tr>
+          <tr><td>BR006</td><td>东风日产</td><td>—</td><td>—</td></tr>
+          <tr><td>BR007</td><td>东风本田</td><td>—</td><td>—</td></tr>
+          <tr><td>BR008</td><td>东风标致</td><td>—</td><td>标致；东风、汽车、车型</td></tr>
+          <tr><td>BR009</td><td>东风雪铁龙</td><td>—</td><td>雪铁龙；东风、汽车、车型</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small">所有正式品牌名称自动作为精确匹配词；弱别名仅在邻近汽车语境下提供初筛证据，最终品牌关联仍由 AI 复核。当前九项的 <code>enabled</code> 均为 <code>True</code>。</p>
+
+      <h3>搜索词：<code>QUERY_ROWS</code> <span class="pill">17 个启用</span></h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>查询 ID</th><th>类别／品牌</th><th>实际搜索词</th></tr></thead>
+        <tbody>
+          <tr><td>B01</td><td>品牌／BR001</td><td>东风汽车 最新动态</td></tr>
+          <tr><td>B02</td><td>品牌／BR002</td><td>东风风神 最新动态</td></tr>
+          <tr><td>B03</td><td>品牌／BR003</td><td>岚图汽车 最新动态</td></tr>
+          <tr><td>B04</td><td>品牌／BR004</td><td>猛士汽车 最新动态</td></tr>
+          <tr><td>B05</td><td>品牌／BR005</td><td>东风奕派 最新动态</td></tr>
+          <tr><td>B06</td><td>品牌／BR006</td><td>东风日产 最新动态</td></tr>
+          <tr><td>B07</td><td>品牌／BR007</td><td>东风本田 最新动态</td></tr>
+          <tr><td>B08</td><td>品牌／BR008</td><td>东风标致 最新动态</td></tr>
+          <tr><td>B09</td><td>品牌／BR009</td><td>东风雪铁龙 最新动态</td></tr>
+          <tr><td>T01</td><td>行业主题</td><td>汽车行业 最新热点</td></tr>
+          <tr><td>T02</td><td>行业主题</td><td>新能源汽车 安全 质量 最新动态</td></tr>
+          <tr><td>T03</td><td>行业主题</td><td>智能驾驶 L3 最新动态</td></tr>
+          <tr><td>T04</td><td>行业主题</td><td>汽车出海 海外市场 最新动态</td></tr>
+          <tr><td>T05</td><td>行业主题</td><td>新车上市 预售 交付 最新动态</td></tr>
+          <tr><td>T06</td><td>行业主题</td><td>汽车召回 监管 投诉 最新动态</td></tr>
+          <tr><td>T07</td><td>行业主题</td><td>汽车技术 测评 耐久 最新动态</td></tr>
+          <tr><td>T08</td><td>行业主题</td><td>汽车品牌 舆情 争议 最新动态</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small">目前 17 条查询均启用；节点 2 限制启用查询最多 17 条。新增启用搜索词超过此数，除增加 <code>QUERY_ROWS</code> 外还需评估并调整 <code>MAX_SEARCH_REQUESTS</code>，同时核对入库接口的 <code>search_queries</code> 上限、模型输入、耗时与费用。</p>
+
+      <h3>程序规则：<code>RULES</code></h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>配置项</th><th>当前内容</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td><code>tracking_param_prefixes</code></td><td><code>utm_</code>、<code>from</code>、<code>share_token</code></td><td>URL 规范化时移除跟踪参数，帮助本轮同 URL 合并。</td></tr>
+          <tr><td><code>non_event_title_patterns</code></td><td>5 条标题正则，见下方展开项</td><td>确定性排除明确的目录／导航标题。</td></tr>
+          <tr><td><code>non_event_url_patterns</code></td><td>3 条 URL 正则，见下方展开项</td><td>排除明确的索引页、企业列表页或账号主页。</td></tr>
+          <tr><td><code>recommendation_headings</code></td><td>相关推荐、相关阅读、推荐阅读、热门推荐、猜你喜欢、相关车型推荐、版权声明</td><td>识别正文尾部推荐/版权区；品牌初筛不把尾部推荐当主文事实。</td></tr>
+          <tr><td><code>max_model_input_chars</code></td><td><code>60000</code></td><td>节点 4 构造的整包 AI 输入字符数上限；超限为致命错误。</td></tr>
+          <tr><td><code>max_payload_bytes</code></td><td><code>4194304</code>（4 MiB）</td><td>6A 对单事件入库请求做字节数预检；服务端仍需自行校验。</td></tr>
+          <tr><td><code>MAX_SEARCH_REQUESTS</code></td><td><code>17</code></td><td>节点 2 启用查询条数上限；它是独立常量，不在 <code>RULES</code> 内。</td></tr>
+        </tbody>
+      </table></div>
+      <details><summary>查看当前标题与 URL 过滤正则</summary><div class="inside">
+        <p>对应节点 2 Python 的配置原文；这里展示的是模式文本，不是让业务系统作为入参传入。</p>
+        <pre><code>non_event_title_patterns:
+  了解更多有关.*的内容
+  ^(?:新车|汽车新闻|行业资讯)[_｜|]
+  聚合所有.*(?:新闻|快讯)
+  第[0-9]+页[-—].*资讯
+  ^(?:企业新闻|品牌官网|官方网站|【官网】)$
+
+non_event_url_patterns:
+  https?://[^/]+/(?:[^?#]*/)?index\.(?:s?html?)(?:[?#].*)?$
+  https?://[^/]*tousu\.sina\.com\.cn/company/view
+  https?://(?:www\.)?weibo\.com/(?:u/)?[0-9]+/?(?:[?#].*)?$</code></pre>
+      </div></details>
+      <p class="small">标题／URL 的程序规则只覆盖确定性排除；旧闻有无新进展、是否属于同一事件等由节点 5 AI 判断。AI 只读取每条来源正文的前 800 个 Python 字符；完整 Markdown 正文仍用于入库。该 800 字截取当前写在节点 4 Python 中，不属于节点 2 的 <code>RULES</code>。</p>
+      <h3>豆包搜索插件配置（不在节点 2 Python 内）</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>插件参数</th><th>当前绑定或值</th><th>修改位置</th></tr></thead>
+        <tbody>
+          <tr><td><code>Query</code></td><td>搜索循环当前词，来自节点 2 <code>queries</code></td><td>查询词本身改节点 2 <code>QUERY_ROWS</code></td></tr>
+          <tr><td><code>TimeRange</code></td><td>节点 2 根据 <code>date</code>生成：前一天 <code>..</code> 当天</td><td>日期窗口逻辑改节点 2 Python</td></tr>
+          <tr><td><code>Count</code></td><td>当前 <code>1</code>；每个查询词最多返回多少条</td><td>只改豆包搜索插件节点，保存并发布工作流</td></tr>
+          <tr><td><code>SearchType</code></td><td><code>web</code></td><td>豆包搜索插件节点</td></tr>
+          <tr><td><code>Filter</code></td><td><code>{"NeedContent":true,"NeedUrl":true}</code></td><td>豆包搜索插件节点</td></tr>
+          <tr><td><code>ContentFormats</code></td><td><code>markdown</code></td><td>豆包搜索插件节点</td></tr>
+        </tbody>
+      </table></div>
+      <details><summary>配置更改后如何验证</summary><div class="inside">
+        <ol class="note-list">
+          <li>改节点 2 Python 的品牌、查询或规则；保持品牌 ID、查询 ID、搜索词唯一，主题查询不绑定品牌 ID。</li>
+          <li>在 HiAgent 对节点 2 用日期样本单独 Debug，检查 <code>queries</code>、<code>time_range</code> 与 <code>plan</code>；启用词数不能超过上限。</li>
+          <li>如只修改搜索条数，改豆包搜索插件 <code>Count</code>，不要再往节点 2 加 <code>count</code> 字段。</li>
+          <li>保存并发布新版工作流，再用真实但可控的来源复测清洗、AI 输入长度、入库幂等和错误分支。未发布前调用方仍使用旧工作流。</li>
+        </ol>
+      </div></details>
+    </section>
+
+    <section id="save-api" data-search="入库 接口 插件 OpenAPI POST batch_id collected_at sources status event_id code message SOURCE_CONFLICT 去重">
+      <div class="kicker">05 / 技术交付接口</div>
+      <h2>候选事件入库接口与 HiAgent 插件</h2>
+      <p>工作流在 6B 按事件循环调用一次插件：<strong>一个事件提交一个请求</strong>，该事件的多个 URL 放在同一请求的 <code>sources</code> 数组中。技术团队须提供业务系统的正式入库服务、接口契约及可在 HiAgent 工作流中选择的插件；现有独立临时服务只用于验证链路，不代替正式业务库。</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>交付项</th><th>明确要求</th></tr></thead>
+        <tbody>
+          <tr><td>正式业务接口</td><td>提供 HTTPS <code>POST /api/ai-content/v1/candidate-events</code>（若业务系统使用其他路径，应同步更新 OpenAPI 与插件），JSON Body，一次保存 1 个候选事件和 1—20 个来源；只入库为“待选用”，不自动发布文章或题目。</td></tr>
+          <tr><td>HiAgent 插件</td><td>技术提供可导入的 OpenAPI 3 契约并发布工具 <code>save_candidate_event</code>，在工作流中可直接选用；五个请求字段要作为插件 Body 入参，<code>sources</code> 必须是对象数组；四个响应字段须可供后续节点单独引用。</td></tr>
+          <tr><td>鉴权与容量</td><td>采用服务端 Bearer 凭证，通过 HiAgent 插件安全配置，不写入工作流业务入参、Prompt 或文档。请求／响应均为 <code>application/json</code>；建议支持约 4 MiB 单事件请求并对超限给出明确错误，最终限额由技术确认。</td></tr>
+          <tr><td>查询与追溯</td><td>保存事件及各来源原始 URL、标题、发布时间和完整 Markdown 正文；提供业务侧按事件查询的能力。返回稳定的业务 <code>event_id</code>，不能把豆包结果 ID 或批次号当事件主键。</td></tr>
+          <tr><td>联调交付</td><td>给出正式 Endpoint、环境、鉴权配置方式、OpenAPI 文件、错误码及测试环境；插件切换正式地址后，完成创建、重复、冲突、多 URL、异常及工作流最终汇总的联调。</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>请求 Body：单事件，多来源</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>字段</th><th>类型／必填</th><th>约束与含义</th></tr></thead>
+        <tbody>
+          <tr><td><code>batch_id</code></td><td>String／是</td><td><code>YYYYMMDD-UUID</code>；同轮事件共用。日期前缀对应开始节点 <code>date</code>，单事件重试沿用原值。</td></tr>
+          <tr><td><code>collected_at</code></td><td>String／是</td><td>带时区 ISO 时间；本轮实际采集开始时刻，不用于决定搜索窗口。</td></tr>
+          <tr><td><code>title</code></td><td>String／是</td><td>事件标题，1—200 字符。</td></tr>
+          <tr><td><code>summary</code></td><td>String／是</td><td>事实概述，接口允许 1—500 字符；工作流生成目标通常不超过 200 字。</td></tr>
+          <tr><td><code>sources</code></td><td>Array&lt;Object&gt;／是</td><td>1—20 个来源；一个来源对象仅对应一个 URL 和其正文。不要把多个 URL 拼入同一个字符串。</td></tr>
+          <tr><td><code>sources[].url</code></td><td>String／是</td><td>单个 HTTP(S) 原始 URL，最长 4096 字符；服务端负责规范化及历史防重。</td></tr>
+          <tr><td><code>sources[].title</code></td><td>String／是</td><td>原始来源标题，1—500 字符。</td></tr>
+          <tr><td><code>sources[].published_at</code></td><td>String／是</td><td>带时区 ISO 发布时间；按 <code>batch_id</code> 日期前缀核验为前一天或当天，且不得晚于 <code>collected_at</code>。</td></tr>
+          <tr><td><code>sources[].content</code></td><td>String／是</td><td>该 URL 对应的原始 Markdown 正文，1—100000 字符；不是 AI 输入的前 800 字截取。</td></tr>
+          <tr><td><code>sources[].search_queries</code></td><td>Array&lt;String&gt;／是</td><td>实际命中该 URL 的搜索词，去重后 1—17 条，每条 1—100 字符。</td></tr>
+          <tr><td><code>sources[].provider_id</code></td><td>String／否</td><td>豆包结果 ID，最长 256 字符；只作追溯，不作唯一键。</td></tr>
+          <tr><td><code>sources[].site_name</code></td><td>String／否</td><td>来源站点名，最长 200 字符；没有则省略，不猜测。</td></tr>
+        </tbody>
+      </table></div>
+      <p>双来源请求示例，示例域名仅供结构核对，不得提交到生产入库接口：</p>
+      <pre><code>{
+  "batch_id": "20260929-11111111-1111-4111-8111-111111111111",
+  "collected_at": "2026-09-29T18:00:00+08:00",
+  "title": "示例事件标题",
+  "summary": "依据两条来源整理的事实概述。",
+  "sources": [
+    {
+      "provider_id": "result-001",
+      "url": "https://example.com/news/001",
+      "title": "示例媒体A报道",
+      "site_name": "示例媒体A",
+      "published_at": "2026-09-29T09:00:00+08:00",
+      "content": "### 媒体A报道\n\n链接001对应的完整Markdown正文。",
+      "search_queries": ["东风汽车 最新动态"]
+    },
+    {
+      "provider_id": "result-002",
+      "url": "https://example.org/news/002",
+      "title": "示例媒体B报道",
+      "site_name": "示例媒体B",
+      "published_at": "2026-09-29T10:00:00+08:00",
+      "content": "### 媒体B报道\n\n链接002对应的完整Markdown正文。",
+      "search_queries": ["东风汽车 最新动态"]
+    }
+  ]
+}</code></pre>
+
+      <h3>统一响应：插件必须暴露四个顶层字段</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>字段</th><th>类型</th><th>契约</th></tr></thead>
+        <tbody>
+          <tr><td><code>status</code></td><td>String</td><td><code>created</code>＝本次新建；<code>existing</code>＝历史已存在；<code>failed</code>＝未保存。工作流凭该字段核对结果，不能只看 HTTP 200。</td></tr>
+          <tr><td><code>event_id</code></td><td>String</td><td><code>created</code>、<code>existing</code> 时为非空业务事件编号；<code>failed</code> 时为空字符串。</td></tr>
+          <tr><td><code>code</code></td><td>String</td><td>机器可判断结果码，例如 <code>OK</code>、<code>ALREADY_EXISTS</code>、<code>SOURCE_CONFLICT</code>；不可只返回提示文案。</td></tr>
+          <tr><td><code>message</code></td><td>String</td><td>简短中文说明，不含凭证、SQL 或堆栈；机器处理以 <code>status/code</code> 为准。</td></tr>
+        </tbody>
+      </table></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>HTTP</th><th><code>status</code>／<code>code</code></th><th>技术侧保存结果与工作流处理</th></tr></thead>
+        <tbody>
+          <tr><td>200</td><td><code>created / OK</code></td><td>事务提交后生成新 <code>event_id</code>；工作流新建计数 +1。</td></tr>
+          <tr><td>200</td><td><code>existing / ALREADY_EXISTS</code></td><td>返回原 <code>event_id</code>，不覆盖历史事件；工作流已存在计数 +1。</td></tr>
+          <tr><td>200</td><td><code>failed / SOURCE_CONFLICT</code></td><td>部分来源已归属历史事件或来源归属不同事件；本次不写入。工作流记录单项失败，正常响应可继续后续事件。</td></tr>
+          <tr><td>400</td><td><code>failed / VALIDATION_ERROR</code></td><td>字段、URL、时间窗口或正文不合法；不自动重试。</td></tr>
+          <tr><td>401</td><td><code>failed / UNAUTHORIZED</code></td><td>插件鉴权失败；视为明确错误，不转成“无有效事件”。</td></tr>
+          <tr><td>413</td><td><code>failed / PAYLOAD_TOO_LARGE</code></td><td>请求体超限；保留原载荷及错误供排查，不截断来源正文后静默重试。</td></tr>
+          <tr><td>500／503</td><td><code>failed / INTERNAL_ERROR</code> 或 <code>SERVICE_UNAVAILABLE</code></td><td>服务异常；当前工作流不配置自动重试。非 2xx 若被 HiAgent 当插件异常，需走明确失败出口。</td></tr>
+        </tbody>
+      </table></div>
+      <p>代表性响应示例：</p>
+      <pre><code>{"status":"created","event_id":"EVT-001","code":"OK","message":"候选事件已保存"}
+{"status":"existing","event_id":"EVT-001","code":"ALREADY_EXISTS","message":"来源已入库，返回已有事件"}
+{"status":"failed","event_id":"","code":"SOURCE_CONFLICT","message":"来源归属冲突，未写入"}</code></pre>
+      <p class="small">上面三行是三次互斥的响应示例，不是一个 JSON 数组。服务自身产生的非 2xx 应尽量返回同样四字段；网关返回非 JSON、网络超时或插件直接抛错时，工作流可能拿不到四字段，必须按失败处理，不能计为入库成功。</p>
+
+      <h3><code>existing</code> 如何判定：查来源 URL 归属，不比较全部字段</h3>
+      <p>接口先把本次 <code>sources[].url</code> 逐一规范化，再查询业务库中的来源归属。<strong>只有本次提交的全部 URL 都已存在、且都归属于同一个历史事件</strong>，才返回 <code>existing / ALREADY_EXISTS</code> 和原 <code>event_id</code>；不新建事件，也不覆盖历史标题、摘要、正文或人工修改。请求只包含该历史事件的部分已存来源时，同样返回 <code>existing</code>。</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>历史库与本次请求</th><th>响应</th><th>原因／处理</th></tr></thead>
+        <tbody>
+          <tr><td>历史事件 E1 已有 URL A；本次只提交 A，但标题、正文或批次号变化</td><td><code>existing / ALREADY_EXISTS</code></td><td>判重依据是 A 的规范化 URL 及其事件归属，不要求其他字段完全一致；返回 E1 的编号，不覆盖旧值。</td></tr>
+          <tr><td>E1 已有 A、B；本次只提交 A</td><td><code>existing / ALREADY_EXISTS</code></td><td>本次提交的全部来源均归属 E1；不要求与 E1 已存的来源集合完全相同。</td></tr>
+          <tr><td>E1 已有 A；本次提交 A 和新 URL B</td><td><code>failed / SOURCE_CONFLICT</code></td><td>部分来源已存在、部分为新来源；整次请求不写入，交由业务侧确认是否补来源。</td></tr>
+          <tr><td>A 属于 E1、B 属于 E2；本次提交 A 和 B</td><td><code>failed / SOURCE_CONFLICT</code></td><td>已存来源分属不同事件；整次请求不写入。</td></tr>
+          <tr><td>E1 已有 A；本次提交不同 URL C，即使 C 报道同一件事</td><td><code>created / OK</code></td><td>仅凭 URL 无法证明 C 与 E1 同事件；先新建候选，入库后的跨 URL 同事件去重／合并由业务系统处理。</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small">URL 规范化应统一处理协议和域名大小写、默认端口、片段和已知跟踪参数，同时保留能区分文章身份的路径与查询参数；正式业务接口须公布并固定具体规则，以规范化 URL 的唯一约束和数据库事务保证并发幂等。豆包结果 ID、<code>batch_id</code>、标题、摘要、发布时间和 Markdown 正文都不作为 <code>existing</code> 的判定键。</p>
+
+      <h3>去重责任：工作流本轮整理，业务系统处理历史与入库后合并</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>处理层</th><th>责任与规则</th></tr></thead>
+        <tbody>
+          <tr><td>工作流</td><td>本次搜索的相同 URL 只保留一份来源，AI 将本轮能确认是同一事件的不同 URL 归到一个候选事件；之后逐事件提交。工作流不查询历史库，也不接受历史 URL 入参。</td></tr>
+          <tr><td>业务系统入库接口</td><td>规范化来源 URL（保留文章身份参数），以数据库唯一约束和事务保证并发幂等；同一批来源已属于同一历史事件返回 <code>existing</code>，不覆盖人工修改；部分重叠或分属多个历史事件返回 <code>SOURCE_CONFLICT</code> 且不写入。</td></tr>
+          <tr><td>业务系统入库后治理</td><td>不同 URL 但描述同一历史事件的跨批次语义去重、候选事件合并和人工确认均在业务系统处理。首版工作流与 URL 幂等接口不能保证识别这种重复；业务侧应保留可追溯的来源关系和处理结果。</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout warn"><strong>当前与目标：</strong>阿里云临时入库插件已经跑通一次成功批次，使用独立存储和临时 <code>event_id</code>。技术提供正式业务接口及 HiAgent 插件后，仍需切换插件目标、确认历史数据是否迁移，并逐项验证上述响应和去重行为；不能把临时服务的成功记录当作正式业务库验收。</div>
+    </section>
+
+    <section id="tests" data-search="测试 验收 状态 联调 Count fatal 幂等 双 URL">
+      <div class="kicker">06 / 验证</div>
+      <h2>测试要点与当前状态</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>场景</th><th>预期</th></tr></thead>
+        <tbody>
+          <tr><td>非法日期</td><td>节点 2 拒绝，不调用豆包搜索；<code>date</code> 与实际运行日不同可正常补跑。</td></tr>
+          <tr><td>同 URL 多词命中</td><td>本轮只保留一个来源，同时保留命中的全部查询词；历史重复由入库服务判断。</td></tr>
+          <tr><td>两 URL 属于同一事件</td><td>AI 将两个来源编号归于一个事件；一次入库请求的 <code>sources</code> 数组含两个对象，各自保留 URL 和 Markdown 全文。</td></tr>
+          <tr><td>相同请求重复入库</td><td>首次 <code>created/OK</code>，再次 <code>existing/ALREADY_EXISTS</code> 并返回原 <code>event_id</code>；新建计数不增加，历史人工修改不被覆盖。</td></tr>
+          <tr><td>来源部分重叠</td><td>返回 <code>failed/SOURCE_CONFLICT</code>，本次零写入；不同 URL 的同一历史事件由业务系统后续去重／合并，不要求工作流查询历史。</td></tr>
+          <tr><td>无有效事件</td><td>End 的 <code>output</code> 为固定文案，且不调用入库插件；须与全查询失败、模型校验失败区分。</td></tr>
+          <tr><td>部分查询或单事件失败</td><td>保存循环正常返回的业务失败进入 <code>errors</code>，其余事件继续处理；网络/非 2xx 异常的循环行为仍需平台实测。</td></tr>
+          <tr><td>接口异常</td><td>400／401／413／500／503 映射为明确错误；即使插件拿不到四字段，也不能把超时、非 JSON 网关响应或鉴权失败统计为成功。</td></tr>
+          <tr><td>调整 <code>Count</code></td><td>仅修改插件配置；节点 2 不应再出现无效的 <code>count=2</code> 或 <code>total_count</code>，同时复核容量、耗时和费用。</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout warn"><strong>当前状态：</strong>HiAgent 已有一次真实成功批次，临时服务只读核对为 4 事件、4 来源；这只证明临时入库成功分支。当前导出中的节点 2 仍带旧的 Count 逻辑，无有效事件节点仍为旧脚本，两个条件节点尚需隔离 <code>fatal=true</code>；空结果、多 URL 同事件和异常分支未完成整链路验收。本文按本地设计 v3.2 写明目标契约，不代表上述修订已在 HiAgent 发布，也不代表正式业务系统接口已交付。</div>
+      <p>本页已包含技术与测试需要的工作流级输入、输出、配置、入库接口及责任边界，可作为单个 HTML 文件独立发布；页面不跳转本地 Markdown。更细的节点 Python 和调试样本仍在项目内部设计资料中维护，若将来另加跨文件链接，须将目标文件一并发布并验证链接可达。测试入库插件会实际写数据，应使用隔离测试库或事先确认可清理的数据。</p>
+    </section>
+    </div>
+    <div id="workflow2" role="tabpanel" aria-labelledby="tab-workflow2" hidden>
+      <section id="workflow2-scope" data-search="工作流2 文章 题库 生成 待设计">
+        <div class="kicker">工作流2 / 待设计</div>
+        <h2>文章与题库生成</h2>
+        <p>工作流2计划围绕已入库候选事件生成评论大赛文章与题库。当前仅预留独立展示位置，尚无已确认的节点设计、输入输出字段、生成规则或接口契约；本 Tab 不能作为技术开发或测试验收依据。</p>
+        <div class="callout warn"><strong>当前边界：</strong>上一个 Tab 中的 <code>date</code>、入库接口、<code>created/existing/failed</code> 响应和测试结论只适用于工作流1，不自动沿用到工作流2。待文章与题库方案确认后，再在本 Tab 补充流程、入参、出参、规则和验收场景。</div>
+      </section>
+    </div>
+    <footer class="foot">本页为可单独发布的工作流级对接说明。工作流1节点内的 <code>plan</code>、<code>clean_json</code>、<code>prepared_json</code> 是内部变量，不要求业务调用方提交或解析。</footer>
+  </article></main>
+  <script>
+    const search=document.getElementById('search');
+    const sections=[...document.querySelectorAll('main section')];
+    const links=[...document.querySelectorAll('.nav a')];
+    const tabs=[...document.querySelectorAll('[role="tab"]')];
+    const panels=[...document.querySelectorAll('[role="tabpanel"]')];
+    const side=document.getElementById('side');
+    const menu=document.getElementById('menu');
+    let activePanel=document.getElementById('workflow1');
+    function filterSections(){
+      const value=search.value.trim().toLocaleLowerCase();
+      activePanel.querySelectorAll('section').forEach(section=>{section.hidden=Boolean(value)&&!(section.textContent+' '+(section.dataset.search||'')).toLocaleLowerCase().includes(value)});
+      if(value){activePanel.querySelectorAll('details').forEach(item=>{if(item.textContent.toLocaleLowerCase().includes(value))item.open=true})}
+    }
+    function activateTab(panelId,updateHash=false){
+      activePanel=document.getElementById(panelId);
+      panels.forEach(panel=>{panel.hidden=panel!==activePanel});
+      tabs.forEach(tab=>{const selected=tab.getAttribute('aria-controls')===panelId;tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1});
+      document.querySelectorAll('[data-workflow-nav]').forEach(nav=>{nav.hidden=nav.dataset.workflowNav!==panelId});
+      search.value='';
+      sections.forEach(section=>{section.hidden=false});
+      side.classList.remove('open');menu.setAttribute('aria-expanded','false');
+      links.forEach(link=>link.classList.remove('active'));
+      if(updateHash)history.replaceState(null,'','#'+panelId);
+    }
+    search.addEventListener('input',filterSections);
+    tabs.forEach((tab,index)=>{
+      tab.addEventListener('click',()=>activateTab(tab.getAttribute('aria-controls'),true));
+      tab.addEventListener('keydown',event=>{
+        if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+        event.preventDefault();
+        const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+        tabs[next].focus();tabs[next].click();
+      });
+    });
+    document.getElementById('expand').addEventListener('click',()=>activePanel.querySelectorAll('details').forEach(item=>item.open=true));
+    document.getElementById('collapse').addEventListener('click',()=>activePanel.querySelectorAll('details').forEach(item=>item.open=false));
+    document.getElementById('print').addEventListener('click',()=>window.print());
+    menu.addEventListener('click',()=>{const opened=side.classList.toggle('open');menu.setAttribute('aria-expanded',String(opened))});
+    links.forEach(link=>link.addEventListener('click',()=>{side.classList.remove('open');menu.setAttribute('aria-expanded','false');search.value='';sections.forEach(section=>{section.hidden=false})}));
+    function selectHashPanel(){
+      const target=document.getElementById(location.hash.slice(1));
+      if(!target)return;
+      const panel=target.closest('[role="tabpanel"]');
+      if(panel&&panel!==activePanel)activateTab(panel.id);
+    }
+    window.addEventListener('hashchange',selectHashPanel);
+    selectHashPanel();
+    const observer=new IntersectionObserver(entries=>{
+      const visible=entries.filter(entry=>entry.isIntersecting&&!entry.target.hidden).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+      if(visible)links.forEach(link=>link.classList.toggle('active',link.hash==='#'+visible.target.id));
+    },{rootMargin:'-20% 0px -65% 0px',threshold:[0,.2,.5]});
+    sections.forEach(section=>observer.observe(section));
+  </script>
+</body>
+</html>
