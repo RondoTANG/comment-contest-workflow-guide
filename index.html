@@ -71,12 +71,27 @@
     .workflow-tab[aria-selected="true"]{background:var(--soft);border-color:#cadbff;color:var(--blue)}
     .workflow-tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
     .workflow-intro{margin-top:7px}
+    [role="tabpanel"]{scroll-margin-top:78px}
+    .scroll-hint{display:none}
+    .generation-flow{padding:24px;min-width:740px}
+    .generation-flow .flow-node{padding:12px 16px;border:1px solid #cad8ed;border-radius:8px;background:#f8fbff;text-align:center}
+    .generation-flow .flow-node strong,.generation-flow .flow-node span{display:block}
+    .generation-flow .flow-node span{font-size:13px;color:var(--muted)}
+    .generation-flow .flow-terminal{max-width:480px;margin:auto;background:var(--soft)}
+    .flow-down{text-align:center;color:var(--blue);font-size:23px;line-height:1.6}
+    .generation-lanes{display:grid;grid-template-columns:1.7fr 1fr;gap:20px;align-items:stretch}
+    .generation-lane{border:1px solid var(--line);border-radius:10px;padding:16px;background:#fff}
+    .generation-lane h3{margin:0 0 13px;text-align:center;font-size:16px;color:#30435f}
+    .material-paths{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .material-paths .flow-node{font-size:14px;min-height:102px}
+    .generation-lane.question-lane{display:flex;flex-direction:column;justify-content:space-between}
+    .generation-lane.question-lane p{font-size:13px;color:var(--muted);text-align:center}
     [hidden]{display:none!important}
     @media(max-width:1050px){.side{width:200px}.bar,main{margin-left:200px}main{padding:32px 25px 80px}}
-    @media(max-width:800px){.side{display:none;position:fixed;top:60px;bottom:0;width:min(280px,88vw);box-shadow:6px 0 24px #1d2b4018}.side.open{display:block}.bar,main{margin-left:0}.bar{padding:8px 14px}.menu-btn{display:inline-block}.bar-label{display:none}.search{margin-left:0;flex:1;min-width:80px;width:auto}main{padding:27px 16px 70px}.branch{grid-template-columns:1fr}h2{font-size:23px}}
+    @media(max-width:800px){.side{display:none;position:fixed;top:60px;bottom:0;width:min(280px,88vw);box-shadow:6px 0 24px #1d2b4018}.side.open{display:block}.bar,main{margin-left:0}.bar{padding:8px 14px}.menu-btn{display:inline-block}.bar-label{display:none}.search{margin-left:0;flex:1;min-width:80px;width:auto}main{padding:27px 16px 70px}.branch{grid-template-columns:1fr}.scroll-hint{display:block}h2{font-size:23px}}
     @media(max-width:480px){.bar{gap:5px}.btn{padding:7px 8px;font-size:13px}.search{font-size:13px}th,td{padding:9px 10px}h1{font-size:30px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-    @media print{body{background:#fff}.side,.bar,.workflow-tabs{display:none!important}main{margin:0;padding:0}article{max-width:none}section{margin-top:28px;break-inside:avoid}.table-wrap,.flow-wrap{overflow:visible}.flow{min-width:0}.flow-step{break-inside:avoid}details{break-inside:avoid}details:not([open]) .inside{display:block}a{color:inherit;text-decoration:none}}
+    @media print{body{background:#fff}.side,.bar,.workflow-tabs,.scroll-hint{display:none!important}main{margin:0;padding:0}article{max-width:none}section{margin-top:28px;break-inside:avoid}.table-wrap,.flow-wrap{overflow:visible}.flow,.generation-flow{min-width:0}.flow-step{break-inside:avoid}details{break-inside:avoid}details:not([open]) .inside{display:block}a{color:inherit;text-decoration:none}}
   </style>
 </head>
 <body>
@@ -91,7 +106,12 @@
       <a href="#tests">测试要点与当前状态</a>
     </nav>
     <nav class="nav" data-workflow-nav="workflow2" aria-label="工作流2章节" hidden>
-      <a href="#workflow2-scope">工作流2建设说明</a>
+      <a href="#workflow2-overview">工作流总览</a>
+      <a href="#workflow2-input">调用输入</a>
+      <a href="#workflow2-output">最终输出</a>
+      <a href="#workflow2-config">节点配置与修改</a>
+      <a href="#workflow2-integration">系统对接与异常</a>
+      <a href="#workflow2-tests">测试要点</a>
     </nav>
   </aside>
   <header class="bar">
@@ -105,7 +125,7 @@
   <main><article>
     <header>
       <h1>评论大赛工作流对接说明</h1>
-      <p class="lead">按工作流查看面向技术与测试的接口契约。工作流1已形成事件采集与入库的对接说明；工作流2将用于文章与题库生成，具体方案尚待确认。</p>
+      <p class="lead">工作流1采集资讯并提交候选事件入库；工作流2根据运营选中的事件生成文章与评论角度，或生成一道题干。按 Tab 查看各自的调用参数、返回字段、配置方式与测试要求。</p>
     </header>
     <div class="workflow-tabs" role="tablist" aria-label="工作流切换">
       <button id="tab-workflow1" class="workflow-tab" type="button" role="tab" aria-controls="workflow1" aria-selected="true" tabindex="0">工作流1 · 事件生成入库</button>
@@ -421,14 +441,211 @@ non_event_url_patterns:
     </section>
     </div>
     <div id="workflow2" role="tabpanel" aria-labelledby="tab-workflow2" hidden>
-      <section id="workflow2-scope" data-search="工作流2 文章 题库 生成 待设计">
-        <div class="kicker">工作流2 / 待设计</div>
-        <h2>文章与题库生成</h2>
-        <p>工作流2计划围绕已入库候选事件生成评论大赛文章与题库。当前仅预留独立展示位置，尚无已确认的节点设计、输入输出字段、生成规则或接口契约；本 Tab 不能作为技术开发或测试验收依据。</p>
-        <div class="callout warn"><strong>当前边界：</strong>上一个 Tab 中的 <code>date</code>、入库接口、<code>created/existing/failed</code> 响应和测试结论只适用于工作流1，不自动沿用到工作流2。待文章与题库方案确认后，再在本 Tab 补充流程、入参、出参、规则和验收场景。</div>
+      <header class="workflow-intro">
+        <h2>工作流2 · 文章与题库生成</h2>
+        <p class="lead">运营选择事件后，业务系统传入事件正文与生成参数。一次调用生成一篇文章及评论角度，或一道题干；生成结果返回业务系统供预览、编辑和保存。</p>
+        <div class="callout"><strong>对接边界：</strong>事件背景直接取自 <code>event_content</code>。有明确关联车型的文章可联网补充资料；生题只使用事件正文。业务系统负责参数校验、草稿保存、人工审核及发布，评分规则由题库和考试模块另行维护。</div>
+      </header>
+
+      <section id="workflow2-overview" data-search="工作流2 总览 流程 文章 article 题目 question 车型 搜索 model_material">
+        <div class="kicker">01 / 工作流</div>
+        <h2>工作流总览</h2>
+        <p class="section-note">文章和题目是两个互斥分支，共用所选事件资料；生题无需先生成文章。</p>
+        <p class="small scroll-hint">窄屏可左右滑动下方流程图，查看完整分支。</p>
+        <div class="flow-wrap" role="img" aria-label="业务系统传入参数，按article或question分支。文章有车型则组装搜索词并联网、整理资料；无车型则使用空资料说明。资料汇合后送文章AI。题目直接送题目AI。两种模型结果汇合为output返回业务系统。">
+          <div class="generation-flow">
+            <div class="flow-node flow-terminal"><strong>开始：业务系统传入平铺字段</strong><span>generation_type 决定本次生成类型</span></div>
+            <div class="flow-down">↓</div>
+            <div class="generation-lanes">
+              <div class="generation-lane">
+                <h3>article · 生成文章</h3>
+                <div class="material-paths">
+                  <div class="flow-node"><strong>关联车型非空</strong><span>Python 组装搜索词<br>→ 豆包搜索一次<br>→ Python 整理联网资料</span></div>
+                  <div class="flow-node"><strong>关联车型为空</strong><span>跳过联网<br>提供固定的空资料说明</span></div>
+                </div>
+                <div class="flow-down">↓</div>
+                <div class="flow-node"><strong>车型资料变量聚合</strong><span>选择本分支的 model_material:String</span></div>
+                <div class="flow-down">↓</div>
+                <div class="flow-node"><strong>文章 AI</strong><span>逐项引用业务字段＋联网资料<br>生成正文及指定数量的评论角度</span></div>
+              </div>
+              <div class="generation-lane question-lane">
+                <h3>question · 生成题干</h3>
+                <p>直接引用 event_content<br>不需要文章专用参数<br>不调用车型搜索</p>
+                <div class="flow-down">↓</div>
+                <div class="flow-node"><strong>题目 AI</strong><span>基于事件生成一道开放式题干<br>不输出参考答案和评分配置</span></div>
+              </div>
+            </div>
+            <div class="flow-down">↓</div>
+            <div class="flow-node flow-terminal"><strong>结果变量聚合 → End</strong><span>返回本次模型的 JSON 字符串 output</span></div>
+          </div>
+        </div>
+        <p>开始节点的字段直接绑定到相应 AI 节点。两处变量聚合分别选择一份车型资料和一份模型结果；搜索整理只处理联网返回，业务入参无需重新拼装为统一 <code>input</code>。</p>
+      </section>
+
+      <section id="workflow2-input" data-search="输入 generation_type event_content topic_name related_model word_count_range angle_count article question 请求 JSON">
+        <div class="kicker">02 / 调用契约</div>
+        <h2>工作流输入参数</h2>
+        <p>以下为 HiAgent 开始节点的业务字段。平台 Endpoint、鉴权、工作流 ID 及外层请求封装，由技术按实际发布环境接入。工作流1的 <code>date</code>、<code>batch_id</code> 和来源数组无需传给本工作流。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>字段／类型</th><th>文章调用</th><th>题目调用</th><th>含义与格式</th></tr></thead>
+          <tbody>
+            <tr><td><code>generation_type</code><br>String</td><td>必填：<code>article</code></td><td>必填：<code>question</code></td><td>决定生成分支；调用方只允许这两个小写值。</td></tr>
+            <tr><td><code>event_content</code><br>String</td><td>必填</td><td>必填</td><td>运营选中事件的相关正文与事实资料，非空。多个来源按标题、URL、正文分段保留，背景由模型从中提取；无需额外传 <code>topic_background</code>。首版业务侧限12,000字符，正式容量按联调结果调整。</td></tr>
+            <tr><td><code>topic_name</code><br>String</td><td>必填</td><td>不传</td><td>运营确定的选题名称，作为业务侧文章标题；模型只返回正文。</td></tr>
+            <tr><td><code>related_model</code><br>String</td><td>可空，空时传 <code>""</code></td><td>不传</td><td>明确的车型名称，例如“岚图梦想家”；非空触发一次搜索。仅有“风神”等品牌名时，应先明确车型；无需补产品信息时传空串。</td></tr>
+            <tr><td><code>word_count_range</code><br>String</td><td>必填</td><td>不传</td><td>单个范围字段，例如 <code>400-600</code>。上下限均为300—1000内的整数，下限小于上限；约束文章正文，不含评论角度。</td></tr>
+            <tr><td><code>angle_count</code><br>Integer</td><td>必填</td><td>不传</td><td>评论角度数量，当前业务口径为2或3；JSON中传数字，例如 <code>3</code>。</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">HiAgent 共用开始节点只将 generation_type、event_content 设为平台必填。文章专用字段的条件必填、范围和类型由业务系统在调用前校验，避免影响只传两项的题目请求。空白车型先去除首尾空格。</p>
+        <details open><summary>文章请求示例：无车型，跳过联网</summary><div class="inside">
+          <p>以下为虚构的接口联调资料，用于检查传参和输出结构，不作为真实资讯发布。有车型时只需将 related_model 替换为具体车型。</p>
+          <pre><code data-json>{
+  "generation_type": "article",
+  "event_content": "【来源1】标题：公共补能站优化夜间使用体验；URL：https://example.com/test/charging\n以下为虚构联调资料：某地公共补能站运营方宣布开展一个月夜间服务试点，涉及三个既有站点，不新增充电桩。试点措施包括优化站内照明、更新进出指引、在现场及线上统一公示分时服务价格，并增加夜间值守。运营方将通过现场问卷收集用户对找站、收费透明度和夜间求助的反馈，每周整理并在试点结束后评估是否保留相关措施。目前没有公布排队时长变化、充电效率提升或用户满意度结果，也未提及任何具体车型。",
+  "topic_name": "从夜间补能看公共充电服务体验",
+  "related_model": "",
+  "word_count_range": "400-600",
+  "angle_count": 3
+}</code></pre>
+        </div></details>
+        <details><summary>题目请求示例：只传类型和事件正文</summary><div class="inside">
+          <pre><code data-json>{
+  "generation_type": "question",
+  "event_content": "以下为虚构联调资料：某地三个公共补能站开展夜间服务试点，优化照明和进出指引，统一公示分时服务价格并增加夜间值守。运营方将收集用户反馈，目前没有公布试点成效。"
+}</code></pre>
+        </div></details>
+      </section>
+
+      <section id="workflow2-output" data-search="输出 output raw_output article_content comment_angles name guidance stem JSON 字符串 解析 空结果">
+        <div class="kicker">03 / 返回契约</div>
+        <h2>最终输出字段</h2>
+        <p>End 只返回一个 <code>output:String</code>，内容为本次模型生成的 JSON 文本。调用方根据本次传入的 generation_type 选择解析规则；模型节点内的 <code>raw_output</code> 是内部变量，无需调用方另取。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>层级／字段</th><th>类型</th><th>含义与使用方式</th></tr></thead>
+          <tbody>
+            <tr><td>End：<code>output</code></td><td>String</td><td>JSON字符串；先读取平台执行状态，再从实际平台响应中取出该字段并解析。平台可能另包一层响应对象，本页只约定End变量。</td></tr>
+            <tr><td>文章：<code>article_content</code></td><td>String</td><td>文章正文，可包含换行。标题沿用请求中的 topic_name；正文按 word_count_range 验收。</td></tr>
+            <tr><td>文章：<code>comment_angles</code></td><td>Array&lt;Object&gt;</td><td>评论角度数组；有效草稿的元素数量必须等于 angle_count。</td></tr>
+            <tr><td>角度：<code>name</code></td><td>String</td><td>非空角度名称，例如“夜间使用体验”，用于展示角度主题。</td></tr>
+            <tr><td>角度：<code>guidance</code></td><td>String</td><td>非空观察与讨论指引；提示成员从哪些方面思考，不是可直接提交的完整评论。</td></tr>
+            <tr><td>题目：<code>stem</code></td><td>String</td><td>一道独立可读的开放式题干，10—200字。题目分类、立场、参考要点、分值和评分配置由业务系统另行维护。</td></tr>
+          </tbody>
+        </table></div>
+        <h3>工作流变量的实际形态</h3>
+        <p>下面展示题目分支的End变量。output是字符串，里面的引号在外层JSON中必须正确转义。</p>
+        <pre><code data-json>{"output":"{\"stem\":\"某地公共补能站优化夜间照明、价格公示和现场值守。请结合实际使用场景，分析这些措施分别回应了哪些用户需求，以及应如何验证试点成效。\"}"}</code></pre>
+        <p>取出output后解析，得到：</p>
+        <pre><code data-json>{
+  "stem": "某地公共补能站优化夜间照明、价格公示和现场值守。请结合实际使用场景，分析这些措施分别回应了哪些用户需求，以及应如何验证试点成效。"
+}</code></pre>
+        <details><summary>文章分支：output解析后的完整示例</summary><div class="inside">
+          <p>对应前面的虚构联调资料；实际业务展示标题取自topic_name。</p>
+          <pre><code data-json>{
+  "article_content": "在本次联调材料设定的场景中，某地公共补能站运营方宣布开展为期一个月的夜间服务试点，涉及三个既有站点。试点不新增充电桩，而是把调整放在照明、进出指引、价格公示和夜间值守上。这提供了一个可讨论的视角：补能服务除了设备本身，也需要关注用户从进入站点到完成充电的整个过程。\n\n从具体措施看，照明和进出指引对应夜间识别环境、寻找入口及车位的需求；现场与线上统一公示分时服务价格，有助于用户在操作前核对收费信息；增加值守，则为需要现场帮助的用户提供联系渠道。这些措施是否真正改善体验，还需要结合实际使用反馈判断，不能仅凭试点启动就认定问题已经解决。\n\n运营方计划通过现场问卷收集用户对找站、收费透明度和夜间求助的反馈，每周整理，并在试点结束后评估是否保留相关措施。材料尚未公布排队时长、充电效率或满意度变化，因此当前可讨论的是措施与需求是否匹配，以及后续应如何观察成效。\n\n对使用者而言，哪些环节最容易影响夜间补能体验？不同用户是否有相同的需求优先级？围绕具体经历提出观察，并区分已公布措施与尚待验证的效果，能让讨论更有依据。",
+  "comment_angles": [
+    {"name": "夜间使用体验", "guidance": "结合真实经历，讨论照明、进出指引与现场求助分别影响哪些使用环节，不替其他用户虚构感受。"},
+    {"name": "收费信息透明度", "guidance": "从查看价格和核对账单的过程出发，讨论现场与线上信息一致对用户判断的作用。"},
+    {"name": "试点成效验证", "guidance": "区分已公布的措施与尚未公布的效果，提出可通过反馈观察的维度及比较方法。"}
+  ]
+}</code></pre>
+        </div></details>
+        <h3>资料不足与结果解析</h3>
+        <p>资料不足时，模型按以下结构返回；这是没有可保存草稿的结果。业务系统展示“资料不足，请补充事件正文”，不创建空文章或空题目。</p>
+        <pre><code data-json>{"article_content":"","comment_angles":[]}</code></pre>
+        <pre><code data-json>{"stem":""}</code></pre>
+        <details><summary>技术处理顺序</summary><div class="inside">
+          <ol class="note-list">
+            <li>确认HiAgent执行成功；超时或节点错误按调用失败处理。</li>
+            <li>取End的output并解析JSON。开头换行和空格可正常解析；内容引号须正确转义，不通过时提示生成结果异常。</li>
+            <li>按请求类型校验字段、非空、正文或题干字数；文章还要核验角度数组数量及每项name、guidance。</li>
+            <li>校验通过后展示草稿，保留所选事件关联，由运营编辑确认后保存、审核与发布。</li>
+          </ol>
+          <p class="small">本工作流不额外生成status、event_id或created/existing状态。正文换行按文本渲染；不要把模型输出作为HTML执行。题干及文章字数按去空白后的可见字符数统计，中文、标点、数字和英文字母均计入。</p>
+        </div></details>
+      </section>
+
+      <section id="workflow2-config" data-search="配置 Python Prompt 提示词 TimeRange Count Filter NeedContent NeedUrl model_query model_material 1000 3 发布">
+        <div class="kicker">04 / 配置维护</div>
+        <h2>节点配置与修改方式</h2>
+        <p>业务系统只传开始节点字段。搜索规则、资料整理方式和两套生成提示词维护在HiAgent内部；修改后需保存并发布工作流，再用文章和题目样本回归。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>内容</th><th>维护位置</th><th>当前规则与修改影响</th></tr></thead>
+          <tbody>
+            <tr><td>搜索问题</td><td>“查询问题组装”Python</td><td>读取related_model，去掉首尾空格，输出 <code>model_query=车型名称＋" 最新资讯"</code>。修改搜索词拼接方式需改此脚本。</td></tr>
+            <tr><td>搜索时间与条数</td><td>豆包国内搜索插件节点</td><td><code>TimeRange</code>、<code>Count</code>由维护人员按需填写。修改这两项无需同步改Python；会影响返回内容、费用与耗时。</td></tr>
+            <tr><td>搜索请求格式</td><td>国内搜索插件</td><td>Query引用model_query；SearchType为web，ContentFormats为markdown；Filter是对象 <code>{"NeedContent":true,"NeedUrl":true}</code>。凭证在插件中配置。</td></tr>
+            <tr><td>联网资料长度</td><td>“搜索结果整理”Python</td><td>从有URL及正文的结果中取最多3条，每条正文前1,000字符，连同标题、URL、发布时间组成 <code>model_material:String</code>。此上限独立于Count；Count调大后，送AI仍最多3条，需更多资料时修改此脚本。</td></tr>
+            <tr><td>文章生成规则</td><td>“生文大模型”Prompt</td><td>逐项读取选题、事件正文、车型、字数范围、角度数量、联网资料；输出正文和角度数组。事件事实优先，车型和年款不匹配时不采用相应产品数据；正文与指引使用中文引号，保证JSON正确转义。</td></tr>
+            <tr><td>题目生成规则</td><td>“生题大模型”Prompt</td><td>只读event_content，一次生成一道10—200字题干；要求分析、回应或提出观察，避免预设宣传结论。评分相关内容不在生成范围。</td></tr>
+            <tr><td>分支与变量引用</td><td>条件节点、变量聚合、AI输入配置</td><td>有车型和空车型均产生可用的model_material；生文AI必须显式绑定该变量。两个AI的raw_output聚合后进入End的output。</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout"><strong>维护重点：</strong>TimeRange、Count在插件节点自由配置；搜索词及资料截取规则改对应Python；写作与生题要求改对应Prompt。每项修改都需发布HiAgent工作流才会对业务调用生效，更新本说明页不会自动修改工作流。</div>
+        <details><summary>内部变量如何流转</summary><div class="inside">
+          <div class="table-wrap"><table>
+            <thead><tr><th>变量</th><th>产生节点</th><th>用途与下一站</th></tr></thead>
+            <tbody>
+              <tr><td>model_query:String</td><td>查询问题组装Python</td><td>一条搜索词，绑定豆包Query。</td></tr>
+              <tr><td>ResponseMetadata / Result</td><td>豆包插件</td><td>状态信息与搜索结果，分别绑定搜索整理的response_metadata / result。</td></tr>
+              <tr><td>model_material:String</td><td>搜索整理或空车型资料分支</td><td>联网资料文本或固定空资料说明，经变量聚合后传给文章AI；不是业务入参。</td></tr>
+              <tr><td>raw_output:String</td><td>文章AI或题目AI</td><td>模型原始JSON文本；最终变量聚合选择本次执行分支，End命名为output。</td></tr>
+            </tbody>
+          </table></div>
+        </div></details>
+      </section>
+
+      <section id="workflow2-integration" data-search="对接 接口 HiAgent 保存 入库 异常 责任 超时 失败 资料不足">
+        <div class="kicker">05 / 系统对接</div>
+        <h2>技术交付与异常处理</h2>
+        <p>技术将工作流2接入业务系统的“生成文章／生成题干”操作。业务系统已有事件正文，可直接传入；草稿保存走现有文章管理或题库管理能力。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>负责方</th><th>需要完成的内容</th></tr></thead>
+          <tbody>
+            <tr><td>业务系统／技术</td><td>运营选事件后整理event_content，传入生成类型及对应参数；接入HiAgent正式调用地址、鉴权和发布版本；校验返回结果，支持草稿预览、编辑、保存及失败提示，并保留事件关联。</td></tr>
+            <tr><td>工作流维护人员</td><td>维护条件分支、两段Python、豆包插件及两套Prompt；变更后发布并联调。搜索只补充关联车型资料，不重新选择业务事件。</td></tr>
+            <tr><td>运营</td><td>确认选题、事件资料与关联车型，核对生成事实和评论角度；题目生成后另行维护分类及后续考核配置，按业务流程审核发布。</td></tr>
+          </tbody>
+        </table></div>
+        <h3>调用结果处理表</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>场景</th><th>工作流表现</th><th>业务系统处理</th></tr></thead>
+          <tbody>
+            <tr><td>生成成功</td><td>返回文章或题目JSON字符串。</td><td>结构和业务校验通过后展示草稿，供运营确认；保存与发布由业务系统处理。</td></tr>
+            <tr><td>车型为空</td><td>不调用搜索，文章AI收到固定空资料说明。</td><td>正常处理草稿，核对内容依据事件正文，没有补造车型参数。</td></tr>
+            <tr><td>搜索返回空结果或接口错误信息</td><td>搜索整理输出“没有可用车型资料”；文章仍可根据事件资料生成。</td><td>根据最终草稿验收；资料不可用时不应出现无依据的产品信息。</td></tr>
+            <tr><td>事件事实不足</td><td>文章输出空正文和空角度数组，或题目输出空stem。</td><td>提示补充资料，不保存空草稿。</td></tr>
+            <tr><td>插件或模型超时、节点抛错</td><td>HiAgent调用失败；未配置异常分支时不返回有效草稿。</td><td>展示失败并保留原表单输入；用户可重新发起，重试可能再次产生调用费用。</td></tr>
+            <tr><td>坏JSON、字段缺失、角度数量或字数不符</td><td>模型可能仍有原始文本返回。</td><td>判为生成结果不合格，不自动保存；提示重新生成或按业务允许的方式人工处理。</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">工作流2返回的是待审核草稿，不调用工作流1的候选事件入库接口；不返回created、existing或事件去重结果。来源URL保留在事件资料或内部联网资料中，本版最终输出不单独返回URL数组。</p>
+      </section>
+
+      <section id="workflow2-tests" data-search="测试 验收 联调 空车型 资料不足 字数 角度 引号 来源">
+        <div class="kicker">06 / 验证</div>
+        <h2>测试要点</h2>
+        <p class="section-note">按当前发布的工作流执行以下用例，并核对节点实际输入和业务系统保存结果。下表为验收要求。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>场景</th><th>预期与检查位置</th></tr></thead>
+          <tbody>
+            <tr><td>文章，车型为空</td><td>搜索节点不执行；文章AI的model_material有空资料说明；返回正文和指定数量角度。</td></tr>
+            <tr><td>文章，填写明确车型</td><td>Query为“车型名称 最新资讯”；确认生文AI实际输入中存在搜索整理后的标题与正文，核对生成的车型事实可追溯。</td></tr>
+            <tr><td>变更TimeRange、Count</td><td>实际请求使用插件配置值，无需改查询Python；同时核对资料整理最多3条的独立限制与调用耗时。</td></tr>
+            <tr><td>题目只传两项</td><td>仅传generation_type=question和event_content可执行；不调用搜索；output解析后只含10—200字stem。</td></tr>
+            <tr><td>缺少文章必填或非法类型</td><td>业务系统在调用前拦截；generation_type只允许article/question，角度数量与范围格式符合约定。</td></tr>
+            <tr><td>搜索无可用资料</td><td>文章可依据事件正文生成；不使用无依据的配置、价格或产品效果填补。</td></tr>
+            <tr><td>多来源内容冲突</td><td>生成内容不把冲突数字、时间或车型版本拼成确定事实，运营仍可回查原事件来源。</td></tr>
+            <tr><td>输入夹带角色指令或无具体事实</td><td>模型把来源内容当资料处理；事实不足返回空结构，不执行夹带指令或编造事件。</td></tr>
+            <tr><td>正文含引号和换行</td><td>业务系统实际解析output成功；中文引号、换行可正常展示，没有未转义字符破坏JSON。</td></tr>
+            <tr><td>字数、角度数量或JSON不合格</td><td>保存前校验拦截；不能仅凭模型节点显示“运行成功”就创建正式内容。</td></tr>
+            <tr><td>模型或搜索调用异常</td><td>业务界面提示失败，保留输入；不把错误文本保存成文章或题干。</td></tr>
+          </tbody>
+        </table></div>
+        <p>本页包含工作流2完整的业务调用与测试说明，可直接分享给技术和测试；更细的Python与Prompt在工作流节点及内部设计文档维护。正式对接时由技术提供环境对应的HiAgent调用信息，不在公开页面填写凭证。</p>
       </section>
     </div>
-    <footer class="foot">本页为可单独发布的工作流级对接说明。工作流1节点内的 <code>plan</code>、<code>clean_json</code>、<code>prepared_json</code> 是内部变量，不要求业务调用方提交或解析。</footer>
+    <footer class="foot">本页可单独发布。工作流1提交候选事件入库，工作流2返回文章或题目草稿；两者的业务参数与结果契约独立。节点内部变量无需业务调用方额外提交。</footer>
   </article></main>
   <script>
     const search=document.getElementById('search');
@@ -468,6 +685,18 @@ non_event_url_patterns:
     document.getElementById('expand').addEventListener('click',()=>activePanel.querySelectorAll('details').forEach(item=>item.open=true));
     document.getElementById('collapse').addEventListener('click',()=>activePanel.querySelectorAll('details').forEach(item=>item.open=false));
     document.getElementById('print').addEventListener('click',()=>window.print());
+    let printSnapshot=null;
+    window.addEventListener('beforeprint',()=>{
+      printSnapshot={sections:[...activePanel.querySelectorAll('section')].map(item=>[item,item.hidden]),details:[...activePanel.querySelectorAll('details')].map(item=>[item,item.open])};
+      printSnapshot.sections.forEach(([item])=>item.hidden=false);
+      printSnapshot.details.forEach(([item])=>item.open=true);
+    });
+    window.addEventListener('afterprint',()=>{
+      if(!printSnapshot)return;
+      printSnapshot.sections.forEach(([item,hidden])=>item.hidden=hidden);
+      printSnapshot.details.forEach(([item,open])=>item.open=open);
+      printSnapshot=null;
+    });
     menu.addEventListener('click',()=>{const opened=side.classList.toggle('open');menu.setAttribute('aria-expanded',String(opened))});
     links.forEach(link=>link.addEventListener('click',()=>{side.classList.remove('open');menu.setAttribute('aria-expanded','false');search.value='';sections.forEach(section=>{section.hidden=false})}));
     function selectHashPanel(){
